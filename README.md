@@ -1,5 +1,11 @@
 # assignment-3-vue
 
+## Screenshots
+![Homepage](./screenshots/homepage.png)
+![Add Task](./screenshots/AddTask.png)
+![Edit Task](./screenshots/EditTask.png)
+
+
 ## Project setup
 ```
 npm install
