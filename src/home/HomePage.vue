@@ -1,8 +1,9 @@
 <template>
   <div class="homepage">
-    <TasksList :taskList="taskList" v-on:complete="onComplete($event)" />
+    <TasksList :taskList="taskList" :depts="depts" :fetchTasks="fetchTasks" />
     <CompletedTasksList
       :taskList="taskList"
+      :depts="depts"
       v-on:complete="onComplete($event)"
       v-on:delete="onDelete($event)"/>
   </div>
@@ -15,37 +16,26 @@ import TasksList from './components/TasksList.vue';
 export default {
   data() {
     return {
-      taskList: {},
+      depts: [],
+      taskList: [],
     };
   },
 
   components: { TasksList, CompletedTasksList },
   created() {
+    this.fetchDepts();
     this.fetchTasks();
   },
   methods: {
+    fetchDepts() {
+      this.$http.get('http://localhost:5000/api/dept')
+        .then((res) => { this.depts = res.data; });
+    },
     fetchTasks() {
-      if ('taskList' in localStorage) {
-        this.taskList = JSON.parse(localStorage.getItem('taskList'));
-      } else {
-        const taskList = {
-          IT: [],
-          HR: [],
-          'New Hire Paperwork': [],
-          'Culture Orientation': [],
-          Other: [],
-        };
-        localStorage.setItem('taskList', JSON.stringify(taskList));
-        this.taskList = JSON.parse(localStorage.getItem('taskList'));
-      }
+      this.$http.get('http://localhost:5000/api/task')
+        .then((res) => { this.taskList = res.data; });
     },
-    onComplete(event) {
-      const index = this.taskList[event.dept].findIndex((task) => task.id === event.id);
-      this.taskList[event.dept][index].completed = !this.taskList[event.dept][index].completed;
-      this.taskList[event.dept][index].completionDate = new Date().toLocaleDateString();
-      localStorage.setItem('taskList', JSON.stringify(this.taskList));
-      this.fetchTasks();
-    },
+
     onDelete(event) {
       const index = this.taskList[event.dept].findIndex((task) => task.id === event.id);
       this.taskList[event.dept].splice(index, 1);

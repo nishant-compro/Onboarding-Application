@@ -91,33 +91,21 @@
             </label>
 
             <div
-              class="mdc-menu mdc-menu-surface"
-              v-on:MDCMenu:selected.prevent="select">
+              class="mdc-menu mdc-menu-surface">
               <ul
                 class="mdc-list"
                 role="menu"
                 aria-hidden="true"
                 aria-orientation="vertical"
                 tabindex="-1">
-                <li class="mdc-list-item" role="menuitem">
+                <li
+                v-for="deptObj in departments"
+                :key="deptObj._id"
+                @click="select(deptObj)"
+                class="mdc-list-item"
+                role="menuitem">
                   <span class="mdc-list-item__ripple"></span>
-                  <span class="mdc-list-item__text">IT</span>
-                </li>
-                <li class="mdc-list-item" role="menuitem">
-                  <span class="mdc-list-item__ripple"></span>
-                  <span class="mdc-list-item__text">HR</span>
-                </li>
-                <li class="mdc-list-item" role="menuitem">
-                  <span class="mdc-list-item__ripple"></span>
-                  <span class="mdc-list-item__text">New Hire Paperwork</span>
-                </li>
-                <li class="mdc-list-item" role="menuitem">
-                  <span class="mdc-list-item__ripple"></span>
-                  <span class="mdc-list-item__text">Culture Orientation</span>
-                </li>
-                <li class="mdc-list-item" role="menuitem">
-                  <span class="mdc-list-item__ripple"></span>
-                  <span class="mdc-list-item__text">Other</span>
+                  <span class="mdc-list-item__text">{{ deptObj.name }}</span>
                 </li>
               </ul>
             </div>
@@ -144,38 +132,50 @@ export default {
     return {
       assignee: '',
       date: '',
+      departments: [],
       dept: '',
-      deptValue: '',
+      deptId: '',
       menu: null,
       title: '',
     };
   },
 
+  created() {
+    this.$http.get('http://localhost:5000/api/dept')
+      .then((res) => { this.departments = res.data; });
+  },
   mounted() {
     [].map.call(
       document.querySelectorAll('.mdc-text-field'),
       (el) => new MDCTextField(el),
     );
     this.menu = new MDCMenu(document.querySelector('.mdc-menu'));
+    console.log(this.departments);
   },
   methods: {
-    select(event) {
-      this.dept = event.detail.item.innerText;
+    select(deptObj) {
+      console.log(deptObj);
+      this.dept = deptObj.name;
+      // eslint-disable-next-line no-underscore-dangle
+      this.deptId = deptObj._id;
+      // this.dept = event.detail.item.innerText;
     },
     toggleDropdown() {
       this.menu.open = !this.menu.open;
     },
-    onSubmit() {
-      const taskList = JSON.parse(localStorage.getItem('taskList'));
-      taskList[this.dept].push({
-        id: Math.random().toString(36).slice(2, 7),
+    async onSubmit() {
+      const task = {
         title: this.title,
         assignee: this.assignee,
-        date: this.date,
+        endDate: this.date,
+        department: this.deptId,
+        remarks: 'remarks',
         completed: false,
-      });
-      localStorage.setItem('taskList', JSON.stringify(taskList));
-      this.$router.replace('/');
+      };
+      const response = await this.$http.post('http://localhost:5000/api/task', task);
+      if (response && response.status === 200) {
+        this.$router.push('/');
+      }
     },
     goBack() {
       this.$router.replace('/');

@@ -144,10 +144,7 @@ import { MDCMenu } from '@material/menu';
 
 export default {
   props: {
-    currentDept: {
-      type: String,
-      required: true,
-    },
+
     id: {
       type: String,
       required: true,
@@ -159,24 +156,25 @@ export default {
       completed: false,
       date: '',
       dept: '',
-      deptValue: '',
       menu: null,
       submitButtonDisabled: true,
-      taskList: {},
+      task: {},
       title: '',
     };
   },
 
   created() {
-    this.taskList = JSON.parse(localStorage.getItem('taskList'));
-    const task = this.taskList[this.currentDept].find(
-      (taskObj) => taskObj.id === this.id,
-    );
-    this.title = task.title;
-    this.assignee = task.assignee;
-    this.date = task.date;
-    this.dept = this.currentDept;
-    this.completed = task.completed;
+    this.$http.get('http://localhost:5000/api/dept')
+      .then((res) => {
+        this.dept = res.data;
+      });
+    this.$http.get(`http://localhost:5000/api/task/${this.id}`)
+      .then((res) => {
+        this.task = res.data;
+        // how to proceed when both dept and task are fetched
+        // use watcher
+        this.updateValues();
+      });
   },
   mounted() {
     [].map.call(
@@ -187,6 +185,13 @@ export default {
     this.submitButtonDisabled = true;
   },
   methods: {
+    updateValues() {
+      this.title = this.task.title;
+      this.assignee = this.task.assignee;
+      this.date = this.task.date;
+      this.dept = this.currentDept;
+      this.completed = this.task.completed;
+    },
     select(event) {
       this.dept = event.detail.item.innerText;
       this.submitButtonDisabled = false;
