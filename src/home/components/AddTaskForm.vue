@@ -111,6 +111,26 @@
             </div>
           </div>
         </div>
+        <div class="task-assignee input-span">
+          <span class="input-label">Remarks:</span>
+          <label
+            class="input-field
+            mdc-text-field
+            mdc-text-field--outlined
+            mdc-text-field--no-label">
+            <span class="mdc-notched-outline">
+              <span class="mdc-notched-outline__leading"></span>
+              <span class="mdc-notched-outline__trailing"></span>
+            </span>
+            <input
+              class="mdc-text-field__input"
+              v-model="remarks"
+              type="text"
+              placeholder="Remarks"
+              aria-label="Name"
+              required/>
+          </label>
+        </div>
 
         <button
           class="add-task-button mdc-button mdc-button--unelevated"
@@ -136,6 +156,7 @@ export default {
       dept: '',
       deptId: '',
       menu: null,
+      remarks: '',
       title: '',
     };
   },
@@ -150,15 +171,12 @@ export default {
       (el) => new MDCTextField(el),
     );
     this.menu = new MDCMenu(document.querySelector('.mdc-menu'));
-    console.log(this.departments);
   },
   methods: {
     select(deptObj) {
-      console.log(deptObj);
       this.dept = deptObj.name;
       // eslint-disable-next-line no-underscore-dangle
       this.deptId = deptObj._id;
-      // this.dept = event.detail.item.innerText;
     },
     toggleDropdown() {
       this.menu.open = !this.menu.open;
@@ -169,7 +187,7 @@ export default {
         assignee: this.assignee,
         endDate: this.date,
         department: this.deptId,
-        remarks: 'remarks',
+        remarks: this.remarks,
         completed: false,
       };
       const response = await this.$http.post('http://localhost:5000/api/task', task);

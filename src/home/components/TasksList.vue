@@ -41,8 +41,7 @@ export default {
       const updatedTask = { ...task, completed: true };
       // eslint-disable-next-line no-underscore-dangle
       this.$http.put(`http://localhost:5000/api/task/${task._id}`, updatedTask)
-        .then((res) => {
-          console.log(res);
+        .then(() => {
           this.fetchTasks();
         });
     },

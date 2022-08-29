@@ -12,11 +12,11 @@
             type="checkbox"
             class="task-checkbox"
             :checked="task.completed"
-            v-on:change="checked(task._id,)"/>
+            v-on:change="checked(task)"/>
           <label class="mdc-list-item__text list-item-label">
             <span class="task-desc">{{ task.title }} </span>
             <span class="task-assignee-date">
-              Completed by {{ task.assignee }} on {{ task.completionDate }}
+              Completed by {{ task.assignee }} on {{ task.completedAt }}
             </span>
           </label>
           <button class="delete-task-btn" @click="deleteTask(task._id)">
@@ -37,14 +37,29 @@ export default {
     depts: {
       required: true,
     },
+    fetchTasks: {
+      required: true,
+    },
   },
 
   methods: {
-    checked(id, dept) {
-      this.$emit('complete', { id, dept });
+    checked(task) {
+      const updatedTask = {
+        ...task,
+        completed: false,
+        completedAt: new Date().toLocaleDateString(),
+      };
+      // eslint-disable-next-line no-underscore-dangle
+      this.$http.put(`http://localhost:5000/api/task/${task._id}`, updatedTask)
+        .then(() => {
+          this.fetchTasks();
+        });
     },
-    deleteTask(id, dept) {
-      this.$emit('delete', { id, dept });
+    deleteTask(id) {
+      this.$http.delete(`http://localhost:5000/api/task/${id}`)
+        .then(() => {
+          this.fetchTasks();
+        });
     },
   },
   computed: {
@@ -72,7 +87,6 @@ export default {
           }
         });
       });
-      console.log(active);
       return active;
     },
   },

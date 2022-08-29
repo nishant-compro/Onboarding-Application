@@ -1,11 +1,7 @@
 <template>
   <div class="homepage">
     <TasksList :taskList="taskList" :depts="depts" :fetchTasks="fetchTasks" />
-    <CompletedTasksList
-      :taskList="taskList"
-      :depts="depts"
-      v-on:complete="onComplete($event)"
-      v-on:delete="onDelete($event)"/>
+    <CompletedTasksList :taskList="taskList" :depts="depts" :fetchTasks="fetchTasks"/>
   </div>
 </template>
 
@@ -34,13 +30,6 @@ export default {
     fetchTasks() {
       this.$http.get('http://localhost:5000/api/task')
         .then((res) => { this.taskList = res.data; });
-    },
-
-    onDelete(event) {
-      const index = this.taskList[event.dept].findIndex((task) => task.id === event.id);
-      this.taskList[event.dept].splice(index, 1);
-      localStorage.setItem('taskList', JSON.stringify(this.taskList));
-      this.fetchTasks();
     },
   },
 };
