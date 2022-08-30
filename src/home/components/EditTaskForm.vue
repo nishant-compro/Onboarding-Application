@@ -101,25 +101,14 @@
                 aria-hidden="true"
                 aria-orientation="vertical"
                 tabindex="-1">
-                <li class="mdc-list-item" role="menuitem">
+                <li
+                v-for="deptObj in departments"
+                :key="deptObj._id"
+                @click="select(deptObj)"
+                class="mdc-list-item"
+                role="menuitem">
                   <span class="mdc-list-item__ripple"></span>
-                  <span class="mdc-list-item__text">IT</span>
-                </li>
-                <li class="mdc-list-item" role="menuitem">
-                  <span class="mdc-list-item__ripple"></span>
-                  <span class="mdc-list-item__text">HR</span>
-                </li>
-                <li class="mdc-list-item" role="menuitem">
-                  <span class="mdc-list-item__ripple"></span>
-                  <span class="mdc-list-item__text">New Hire Paperwork</span>
-                </li>
-                <li class="mdc-list-item" role="menuitem">
-                  <span class="mdc-list-item__ripple"></span>
-                  <span class="mdc-list-item__text">Culture Orientation</span>
-                </li>
-                <li class="mdc-list-item" role="menuitem">
-                  <span class="mdc-list-item__ripple"></span>
-                  <span class="mdc-list-item__text">Other</span>
+                  <span class="mdc-list-item__text">{{ deptObj.name }}</span>
                 </li>
               </ul>
             </div>
@@ -144,10 +133,7 @@ import { MDCMenu } from '@material/menu';
 
 export default {
   props: {
-    currentDept: {
-      type: String,
-      required: true,
-    },
+
     id: {
       type: String,
       required: true,
@@ -158,25 +144,26 @@ export default {
       assignee: '',
       completed: false,
       date: '',
+      departments: [],
       dept: '',
-      deptValue: '',
+      deptId: '',
       menu: null,
       submitButtonDisabled: true,
-      taskList: {},
+      task: {},
       title: '',
     };
   },
 
   created() {
-    this.taskList = JSON.parse(localStorage.getItem('taskList'));
-    const task = this.taskList[this.currentDept].find(
-      (taskObj) => taskObj.id === this.id,
-    );
-    this.title = task.title;
-    this.assignee = task.assignee;
-    this.date = task.date;
-    this.dept = this.currentDept;
-    this.completed = task.completed;
+    this.$http.get('http://localhost:5000/api/dept')
+      .then((deptRes) => {
+        this.departments = deptRes.data;
+        this.$http.get(`http://localhost:5000/api/task/${this.id}`)
+          .then((taskRes) => {
+            this.task = taskRes.data;
+            this.updateFieldValues();
+          });
+      });
   },
   mounted() {
     [].map.call(
@@ -187,8 +174,21 @@ export default {
     this.submitButtonDisabled = true;
   },
   methods: {
-    select(event) {
-      this.dept = event.detail.item.innerText;
+    updateFieldValues() {
+      this.title = this.task.title;
+      this.assignee = this.task.assignee;
+      this.date = this.task.endDate;
+      // eslint-disable-next-line no-underscore-dangle
+      const currentDept = this.departments.find((dt) => dt._id === this.task.department);
+      this.dept = currentDept.name;
+      // eslint-disable-next-line no-underscore-dangle
+      this.deptId = currentDept._id;
+      this.completed = this.task.completed;
+    },
+    select(deptObj) {
+      this.dept = deptObj.name;
+      // eslint-disable-next-line no-underscore-dangle
+      this.deptId = deptObj._id;
       this.submitButtonDisabled = false;
     },
     toggleDropdown() {
@@ -197,25 +197,19 @@ export default {
     onChange() {
       this.submitButtonDisabled = false;
     },
-    onSubmit() {
-      const index = this.taskList[this.currentDept].findIndex(
-        (task) => task.id === this.id,
-      );
-      if (this.currentDept === this.dept) {
-        this.taskList[this.currentDept][index].title = this.title;
-        this.taskList[this.currentDept][index].assignee = this.assignee;
-        this.taskList[this.currentDept][index].date = this.date;
-      } else {
-        this.taskList[this.currentDept].splice(index, 1);
-        this.taskList[this.dept].push({
-          id: this.id,
-          title: this.title,
-          assignee: this.assignee,
-          date: this.date,
-          completed: this.completed,
-        });
+    async onSubmit() {
+      const updatedTask = {
+        title: this.title,
+        assignee: this.assignee,
+        endDate: this.date,
+        department: this.deptId,
+        remarks: 'remarks',
+        completed: false,
+      };
+      const response = await this.$http.put(`http://localhost:5000/api/task/${this.id}`, updatedTask);
+      if (response && response.status === 200) {
+        this.$router.push('/');
       }
-      localStorage.setItem('taskList', JSON.stringify(this.taskList));
       this.$router.replace('/');
     },
     goBack() {

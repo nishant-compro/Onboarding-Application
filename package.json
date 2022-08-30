@@ -16,6 +16,7 @@
     "@material/menu": "^14.0.0",
     "@material/radio": "^14.0.0",
     "@material/textfield": "^14.0.0",
+    "axios": "^0.27.2",
     "core-js": "^3.8.3",
     "sass": "^1.54.3",
     "vue": "^2.6.14",

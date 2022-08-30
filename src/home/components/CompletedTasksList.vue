@@ -1,25 +1,25 @@
 <template>
   <div class="task-list">
-    <div v-for="dept in completedDepts" :key="dept">
-      <span class="dept-header">{{ dept }}</span>
+    <div v-for="deptId in Object.keys(completedDepts)" :key="deptId">
+      <span class="dept-header">{{ completedDepts[deptId] }}</span>
       <ul class="mdc-list" role="group" aria-label="List with checkbox items">
         <li
-          v-for="task in completedTaskList[dept]"
-          :key="task.id"
+          v-for="task in completedTaskList[deptId]"
+          :key="task._id"
           class="mdc-list-item list-item"
           aria-checked="false">
           <input
             type="checkbox"
             class="task-checkbox"
             :checked="task.completed"
-            v-on:change="checked(task.id, dept)"/>
+            v-on:change="checked(task)"/>
           <label class="mdc-list-item__text list-item-label">
             <span class="task-desc">{{ task.title }} </span>
             <span class="task-assignee-date">
-              Completed by {{ task.assignee }} on {{ task.completionDate }}
+              Completed by {{ task.assignee }} on {{ task.completedAt }}
             </span>
           </label>
-          <button class="delete-task-btn" @click="deleteTask(task.id, dept)">
+          <button class="delete-task-btn" @click="deleteTask(task._id)">
             <span class="material-icons"> delete </span>
           </button>
         </li>
@@ -32,36 +32,62 @@
 export default {
   props: {
     taskList: {
-      type: Object,
+      required: true,
+    },
+    depts: {
+      required: true,
+    },
+    fetchTasks: {
       required: true,
     },
   },
+
   methods: {
-    checked(id, dept) {
-      this.$emit('complete', { id, dept });
+    checked(task) {
+      const updatedTask = {
+        ...task,
+        completed: false,
+        completedAt: new Date().toLocaleDateString(),
+      };
+      // eslint-disable-next-line no-underscore-dangle
+      this.$http.put(`http://localhost:5000/api/task/${task._id}`, updatedTask)
+        .then(() => {
+          this.fetchTasks();
+        });
     },
-    deleteTask(id, dept) {
-      this.$emit('delete', { id, dept });
+    deleteTask(id) {
+      this.$http.delete(`http://localhost:5000/api/task/${id}`)
+        .then(() => {
+          this.fetchTasks();
+        });
     },
   },
   computed: {
     completedTaskList() {
-      const depts = Object.keys(this.taskList);
       const filtered = {};
-      depts.forEach((dept) => {
-        if (this.taskList[dept].length !== 0) {
-          this.taskList[dept].forEach((task) => {
-            if (task.completed) {
-              if (dept in filtered) filtered[dept].push(task);
-              else filtered[dept] = [task];
-            }
-          });
+      this.taskList.forEach((task) => {
+        if (task.completed) {
+          if (task.department in filtered) {
+            filtered[task.department].push(task);
+          } else {
+            filtered[task.department] = [task];
+          }
         }
       });
       return filtered;
     },
     completedDepts() {
-      return Object.keys(this.completedTaskList);
+      const deptKeys = Object.keys(this.completedTaskList);
+      const active = {};
+      deptKeys.forEach((key) => {
+        this.depts.forEach((dp) => {
+          // eslint-disable-next-line no-underscore-dangle
+          if (dp._id === key) {
+            active[key] = dp.name;
+          }
+        });
+      });
+      return active;
     },
   },
 };
