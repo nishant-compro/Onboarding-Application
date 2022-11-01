@@ -1,0 +1,21 @@
+{
+  "name": "aws",
+  "version": "0.1.0",
+  "bin": {
+    "aws": "bin/aws.js"
+  },
+  "scripts": {
+    "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
+    "cdk": "cdk",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.41.0",
+    "jest": "^27.5.1"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.41.0",
+    "aws-sdk": "^2.1240.0",
+    "constructs": "^10.0.0"
+  }
+}
